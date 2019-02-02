@@ -37,20 +37,46 @@ const pixelStr = num => {
   return num + 'px';
 }
 
-const moveBlockToRight = (block, distance = 10) => {
-  let originalMarginLeftNumber = pixelNumber(block.style.marginLeft);
-  block.style.marginLeft = pixelStr(originalMarginLeftNumber + distance);
+const moveBlockToRight = (block, distance = 1) => {
+  if (ready) {
+    let originalMarginLeftNumber = pixelNumber(block.style.marginLeft);
+    moveBlockToLocation(block, originalMarginLeftNumber + distance);
+  }
+}
+
+//move block to location, defaulting to the left.
+const moveBlockToLocation = (block, location = 10) => {
+  block.style.marginLeft = pixelStr(location);
 }
 
 //adds event listeners on each block that runs move block to top when clicked.
 blocks.forEach(e => {
-  e.addEventListener('click', event => {
+  e.addEventListener('mousedown', event => {
     moveBlockToTop(event.target);
   });
 });
 
-// blocks.forEach(e => {
-//   e.addEventListener('click', event => {
-//     moveBlockToTop(event.target);
-//   });
-// });
+//array of mouse events we want to cancel the action on.
+const cancelEvents = ['mouseup', 'mouseleave']
+
+//add event handler that moves box 1 pixel to right every 10ms on mousedown
+//but waits to start the moving until half a second has passed.
+const wait = 500;
+let ready;
+blocks.forEach((e, i) => {
+  let processId;
+  e.addEventListener('mousedown', event => {
+    ready = false;
+    processId = window.setInterval(moveBlockToRight, 10, event.target);
+    window.setTimeout(() => {
+      ready = true;
+    }, 500);
+  });
+  cancelEvents.forEach(f => {
+    e.addEventListener(f, event => {
+      clearInterval(processId);
+      moveBlockToLocation(e);
+    });
+  });
+});
+
